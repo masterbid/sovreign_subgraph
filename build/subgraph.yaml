@@ -1,6 +1,6 @@
 specVersion: 0.0.2
 schema:
-  file: ./schema.graphql
+  file: schema.graphql
 dataSources:
   - kind: ethereum/contract
     name: SovToken
@@ -18,18 +18,17 @@ dataSources:
         - Mint
       abis:
         - name: SovToken
-          file: ./abis/SovToken.json
+          file: SovToken\abis\SovToken.json
       eventHandlers:
         - event: Mint(indexed address,uint256)
           handler: handleMint
-      file: ./src/SOVMapping.ts
+      file: SovToken\SovToken.wasm
   - kind: ethereum/contract
     name: ReignDAO
     network: mainnet
     source:
       address: "0xdE809BBe8FB348581D4c913393E0AD456002D591"
       abi: ReignDAO
-      startBlock: 13047864
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -38,8 +37,8 @@ dataSources:
         - Vote
       abis:
         - name: ReignDAO
-          file: ./abis/ReignDAO.json
+          file: ReignDAO\abis\ReignDAO.json
       eventHandlers:
         - event: Vote(indexed uint256,indexed address,bool,uint256)
           handler: handleVote
-      file: ./src/SOVMapping.ts
+      file: SovToken\SovToken.wasm
