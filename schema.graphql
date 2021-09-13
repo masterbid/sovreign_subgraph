@@ -1,22 +1,91 @@
+
+
 type Account @entity {
   id: ID! #<accountAddress>
   address: Bytes!
-  mints: [Mint!]! @derivedFrom(field: "to")
-  voteHistory: [Vote!]! @derivedFrom(field: "user")
+  mints: [Mint!]! @derivedFrom(field: "sender")
+  burns: [Burn!]! @derivedFrom(field: "sender")
+  positions: [Position!]! @derivedFrom(field: "account")
+}
+
+type AccountLiquidity @entity {
+  id: ID! # {accountAddress}
+  pair: Pair!
+  account: Account!
+  balance: BigDecimal!
+}
+
+type AccountPosition @entity {
+  id: ID! # {userAddress}{marketAddress}{positionType}
+  positionCounter: BigInt!
+  positions: [Position!]! @derivedFrom(field: "accountPosition")
+}
+
+# We can not keep balances and roi updated all the time. 
+# We can update these only when the account of the position makes some changes in the position
+# at others time when market variables are changing because of other's actions then we won't update these
+type Position @entity {
+  id: ID! # {accountPositionId}{autoIncrement}
+  accountPosition: AccountPosition!
+  account: Account!
+  accountAddress: String!
+  outputTokenBalance: BigDecimal!
+  inputTokenBalances: [String!]!    # TokenBalance string format
+  rewardTokenBalances: [String!]!   # TokenBalance string format
+  transferredTo: [String!]!
+  closed: Boolean!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+}
+
+type Token @entity {
+  id: ID!
+  address: Bytes! #<Token address>
+  decimals: Int! #<Number of decimals the token uses>
+  name: String! #<Human-readable name of the token>
+  symbol: String! #<Symbol of the token>
+}
+
+type Pair @entity {
+  id: ID! # {pairAddress}
+  token0: Token!
+  token1: Token!
+  reserve0: BigDecimal!
+  reserve1: BigDecimal!
+  totalSupply: BigDecimal!
+  blockNumber: BigInt!
+  timestamp: BigInt!
 }
 
 type Mint @entity {
   id: ID!
-  to: Account!
-  value: BigDecimal!
-  timestamp: BigInt!
-  transaction: Bytes!
+  token0: Token!
+  token1: Token!
+  amount0: BigDecimal #<Quantity of tokens minted>
+  amount1: BigDecimal #<Quantity of tokens minted>
+  liquidityAmount: BigDecimal
+  sender: Account! #<Address of destination account>
+  transferEventApplied: Boolean!
+  syncEventApplied: Boolean!
+  mintEventApplied: Boolean!
+  block: BigInt! #<Block number>
+  timestamp: BigInt! #<Event timestamp>
+  transaction: Bytes! #<Transaction hash>
 }
 
-type Vote @entity {
+type Burn @entity {
   id: ID!
-  proposalId: BigInt!
-  user: Account!
-  support: Boolean!
-  votingPower: BigInt!
+  token0: Token!
+  token1: Token!
+  sender: Account! #<Address of sender account>
+  liquidityAmount: BigDecimal
+  amount0: BigDecimal
+  amount1: BigDecimal
+  transferEventApplied: Boolean!
+  syncEventApplied: Boolean!
+  burnEventApplied: Boolean!
+  block: BigInt! #<Block number>
+  timestamp: BigInt! #<Event timestamp>
+  transaction: Bytes! #<Transaction hash>
 }
+

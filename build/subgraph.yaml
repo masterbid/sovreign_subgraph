@@ -3,42 +3,62 @@ schema:
   file: schema.graphql
 dataSources:
   - kind: ethereum/contract
-    name: SovToken
+    name: SushiswapFactory
     network: mainnet
     source:
-      address: "0x0afee744b6d9ff2b78f76fe10b3e0199c413fd34"
-      abi: SovToken
-      startBlock: 13041691
+      address: "0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac"
+      abi: SushiswapFactory
+      startBlock: 13042175
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
         - Account
-        - Mint
+        - Token
+        - Pair
       abis:
-        - name: SovToken
-          file: SovToken\abis\SovToken.json
+        - name: SushiswapFactory
+          file: SushiswapFactory\abis\SushiswapFactory.json
+        - name: IERC20
+          file: SushiswapFactory\abis\IERC20.json
       eventHandlers:
-        - event: Mint(indexed address,uint256)
-          handler: handleMint
-      file: SovToken\SovToken.wasm
+        - event: PairCreated(indexed address,indexed address,address,uint256)
+          handler: handlePairCreated
+      file: SushiswapFactory\SushiswapFactory.wasm
   - kind: ethereum/contract
-    name: ReignDAO
+    name: SovUsdc
     network: mainnet
     source:
-      address: "0xdE809BBe8FB348581D4c913393E0AD456002D591"
-      abi: ReignDAO
+      address: "0x9B98Ff54446C7Ccf3118f980B5F32520d7Fa5207"
+      abi: SovUsdc
+      startBlock: 13042175
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
-        - Vote
+        - Account
+        - Token
+        - Market
+        - Transaction
+        - Transfer
+        - Position
+        - PositionSnapshot
+        - Pair
+        - PairSnapshot
       abis:
-        - name: ReignDAO
-          file: ReignDAO\abis\ReignDAO.json
+        - name: SovUsdc
+          file: SovUsdc\abis\SovUsdc.json
+        - name: IERC20
+          file: SovUsdc\abis\IERC20.json
       eventHandlers:
-        - event: Vote(indexed uint256,indexed address,bool,uint256)
-          handler: handleVote
-      file: SovToken\SovToken.wasm
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+        - event: Mint(indexed address,uint256,uint256)
+          handler: handleMint
+        - event: Burn(indexed address,uint256,uint256,indexed address)
+          handler: handleBurn
+        - event: Sync(uint112,uint112)
+          handler: handleSync
+      file: SovUsdc\SovUsdc.wasm
