@@ -1,7 +1,6 @@
 import { BigInt, BigDecimal, Address, ethereum } from '@graphprotocol/graph-ts';
-import { Mint, Burn, InitializeCall } from "../generated/SovUsdc/SovUsdc";
+import { Mint, Burn, Sync } from "../generated/SovUsdc/SovUsdc";
 import { IERC20 } from '../generated/SovUsdc/IERC20'
-import {Vote} from "../generated/ReignDAO/ReignDAO";
 import { 
   Mint as MintEntity,
   Burn as BurnEntity,
@@ -78,7 +77,7 @@ export function getOrCreateLiquidity(pair: PairEntity, accountAddress: Address):
   liqudity.pair = pair.id
   liqudity.account = getOrCreateAccount(accountAddress).id
   liqudity.balance = BigInt.fromI32(0).toBigDecimal()
-  liqudity.save()
+ 
   return liqudity as AccountLiquidityEntity
 }
 
@@ -170,6 +169,9 @@ export function handleBurn(event: Burn): void {
   burn.amount1 = toDecimal(event.params.amount1, token1.decimals)
   burn.save()
   createOrUpdatePositionOnBurn(event, pair, burn)
+}
+export function handleSync(event: Sync): void {
+  
 }
 
 

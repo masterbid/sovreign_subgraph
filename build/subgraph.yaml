@@ -40,13 +40,12 @@ dataSources:
       entities:
         - Account
         - Token
-        - Market
-        - Transaction
-        - Transfer
+        - AccountPosition
+        - AccountLiquidity
         - Position
-        - PositionSnapshot
         - Pair
-        - PairSnapshot
+        - Burn
+        - Mint
       abis:
         - name: SovUsdc
           file: SovUsdc\abis\SovUsdc.json
