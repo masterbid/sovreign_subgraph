@@ -550,21 +550,13 @@ export class Mint extends Entity {
     }
   }
 
-  get liquidityAmount(): BigDecimal | null {
+  get liquidityAmount(): BigDecimal {
     let value = this.get("liquidityAmount");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBigDecimal();
-    }
+    return value.toBigDecimal();
   }
 
-  set liquidityAmount(value: BigDecimal | null) {
-    if (value === null) {
-      this.unset("liquidityAmount");
-    } else {
-      this.set("liquidityAmount", Value.fromBigDecimal(value as BigDecimal));
-    }
+  set liquidityAmount(value: BigDecimal) {
+    this.set("liquidityAmount", Value.fromBigDecimal(value));
   }
 
   get sender(): string {
@@ -688,21 +680,13 @@ export class Burn extends Entity {
     this.set("sender", Value.fromString(value));
   }
 
-  get liquidityAmount(): BigDecimal | null {
+  get liquidityAmount(): BigDecimal {
     let value = this.get("liquidityAmount");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBigDecimal();
-    }
+    return value.toBigDecimal();
   }
 
-  set liquidityAmount(value: BigDecimal | null) {
-    if (value === null) {
-      this.unset("liquidityAmount");
-    } else {
-      this.set("liquidityAmount", Value.fromBigDecimal(value as BigDecimal));
-    }
+  set liquidityAmount(value: BigDecimal) {
+    this.set("liquidityAmount", Value.fromBigDecimal(value));
   }
 
   get amount0(): BigDecimal | null {

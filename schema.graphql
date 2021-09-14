@@ -16,14 +16,11 @@ type AccountLiquidity @entity {
 }
 
 type AccountPosition @entity {
-  id: ID! # {userAddress}{marketAddress}{positionType}
+  id: ID! # {userAddress}
   positionCounter: BigInt!
   positions: [Position!]! @derivedFrom(field: "accountPosition")
 }
 
-# We can not keep balances and roi updated all the time. 
-# We can update these only when the account of the position makes some changes in the position
-# at others time when market variables are changing because of other's actions then we won't update these
 type Position @entity {
   id: ID! # {accountPositionId}{autoIncrement}
   accountPosition: AccountPosition!
@@ -63,7 +60,7 @@ type Mint @entity {
   token1: Token!
   amount0: BigDecimal #<Quantity of tokens minted>
   amount1: BigDecimal #<Quantity of tokens minted>
-  liquidityAmount: BigDecimal
+  liquidityAmount: BigDecimal!
   sender: Account! #<Address of destination account>
   transferEventApplied: Boolean!
   syncEventApplied: Boolean!
@@ -78,7 +75,7 @@ type Burn @entity {
   token0: Token!
   token1: Token!
   sender: Account! #<Address of sender account>
-  liquidityAmount: BigDecimal
+  liquidityAmount: BigDecimal!
   amount0: BigDecimal
   amount1: BigDecimal
   transferEventApplied: Boolean!

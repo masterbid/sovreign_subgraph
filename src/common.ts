@@ -21,7 +21,7 @@ export function getOrCreateAccount(accountAddress: Bytes): Account {
   
     let newAccount = new Account(accountId)
     newAccount.address = accountAddress
-    
+    newAccount.save()
     return newAccount
 }
 
@@ -68,23 +68,25 @@ export function getOrCreateOpenPosition(
   let lastPosition = Position.load(pid)
 
   if (lastPosition == null || lastPosition.closed) {
-      let newCounter = accountPosition.positionCounter.plus(BigInt.fromI32(1))
-      let newPositionId = id.concat("-").concat(newCounter.toString())
-      let position = new Position(newPositionId)
-      position.accountPosition = accountPosition.id
-      position.account = account.id
-      position.accountAddress = account.id
-      position.transferredTo = []
-      position.closed = false
-      position.blockNumber = event.block.number
-      position.timestamp = event.block.timestamp
-      
-      position.save()
+    let newCounter = accountPosition.positionCounter.plus(BigInt.fromI32(1))
+    let newPositionId = id.concat("-").concat(newCounter.toString())
+    let position = new Position(newPositionId)
+    position.accountPosition = accountPosition.id
+    position.account = account.id
+    position.accountAddress = account.id
+    position.outputTokenBalance = BigInt.fromI32(0).toBigDecimal()
+    position.inputTokenBalances = []
+    position.rewardTokenBalances = []
+    position.transferredTo = []
+    position.closed = false
+    position.blockNumber = event.block.number
+    position.timestamp = event.block.timestamp
+    position.save()
 
-      accountPosition.positionCounter = newCounter
-      accountPosition.save()
+    accountPosition.positionCounter = newCounter
+    accountPosition.save()
 
-      return position
+    return position
   }
 
   return lastPosition as Position
@@ -118,7 +120,7 @@ export class TokenBalance {
       let parts = tb.split("|")
       let tokenAddress = parts[0]
       let accountAddress = parts[1]
-      let balance = BigDecimal.fromString(parts[2])
+      let balance = BigInt.fromString(parts[2]).toBigDecimal()
       return new TokenBalance(tokenAddress, accountAddress, balance)
   }
 }

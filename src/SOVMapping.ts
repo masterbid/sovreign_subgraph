@@ -1,5 +1,5 @@
 import { BigInt, BigDecimal, Address, ethereum } from '@graphprotocol/graph-ts';
-import { Mint, Burn, Sync } from "../generated/SovUsdc/SovUsdc";
+import { Mint, Burn, Sync, Transfer } from "../generated/SovUsdc/SovUsdc";
 import { IERC20 } from '../generated/SovUsdc/IERC20'
 import { 
   Mint as MintEntity,
@@ -36,6 +36,7 @@ function getOrCreateMint(event: ethereum.Event, pair: PairEntity): MintEntity {
   mint = new MintEntity(event.transaction.hash.toHexString())
   mint.token0 = token0.id
   mint.token1 = token1.id
+  mint.liquidityAmount = BigInt.fromI32(0).toBigDecimal()
   mint.transferEventApplied = false
   mint.syncEventApplied = false
   mint.mintEventApplied = false
@@ -57,6 +58,9 @@ function getOrCreateBurn(event: ethereum.Event, pair: PairEntity): BurnEntity {
   let token1 = getOrCreateERC20Token(event, Address.fromString(pair.token1))
   token0.save()
   token1.save()
+  burn.token0 = token0.id
+  burn.token1 = token1.id
+  burn.liquidityAmount = BigInt.fromI32(0).toBigDecimal()
   burn.transferEventApplied = false
   burn.syncEventApplied = false
   burn.burnEventApplied = false
@@ -77,7 +81,7 @@ export function getOrCreateLiquidity(pair: PairEntity, accountAddress: Address):
   liqudity.pair = pair.id
   liqudity.account = getOrCreateAccount(accountAddress).id
   liqudity.balance = BigInt.fromI32(0).toBigDecimal()
- 
+  liqudity.save()
   return liqudity as AccountLiquidityEntity
 }
 
@@ -145,6 +149,67 @@ function createOrUpdatePositionOnBurn(event: ethereum.Event, pair: PairEntity, b
 }
 
 
+export function handleTransfer(event: Transfer): void {
+  if (event.params.value == BigInt.fromI32(0)) {
+    return
+  }
+
+  let pairAddressHex = event.address.toHexString()
+  let fromHex = event.params.from.toHexString()
+  let toHex = event.params.to.toHexString()
+
+  let pair = PairEntity.load(pairAddressHex) as PairEntity
+  let token0 = getOrCreateERC20Token(event, Address.fromString(pair.token0))
+
+  // update account balances
+  if (fromHex != ADDRESS_ZERO) {
+    let accountLiquidityFrom = getOrCreateLiquidity(pair, event.params.from)
+    accountLiquidityFrom.balance = accountLiquidityFrom.balance.minus(toDecimal(event.params.value, token0.decimals))
+    accountLiquidityFrom.save()
+  }
+
+  if (fromHex != pairAddressHex) {
+    let accountLiquidityTo = getOrCreateLiquidity(pair, event.params.to)
+    accountLiquidityTo.balance = accountLiquidityTo.balance.plus(toDecimal(event.params.value, token0.decimals))
+    accountLiquidityTo.save()
+  }
+
+  // Check if transfer it's a mint or burn or transfer transaction
+  // minting new LP tokens
+  if (fromHex == ADDRESS_ZERO) {
+    if (toHex == ADDRESS_ZERO) {
+      pair.totalSupply = pair.totalSupply.plus(toDecimal(event.params.value, token0.decimals))
+      pair.save()
+    }
+
+    let mint = getOrCreateMint(event, pair)
+    mint.transferEventApplied = true
+    mint.sender = getOrCreateAccount(event.params.to).id
+    mint.liquidityAmount = toDecimal(event.params.value, token0.decimals)
+    mint.save()
+    createOrUpdatePositionOnMint(event, pair, mint)
+  }
+
+  // send to pair contract before burn method call
+  if (fromHex != ADDRESS_ZERO && toHex == pairAddressHex) {
+    let burn = getOrCreateBurn(event, pair)
+    burn.transferEventApplied = true
+    burn.sender = getOrCreateAccount(event.params.from).id
+    burn.liquidityAmount = toDecimal(event.params.value, token0.decimals)
+    burn.save()
+    createOrUpdatePositionOnBurn(event, pair, burn)
+  }
+
+  // internal _burn method call
+  if (fromHex == pairAddressHex && toHex == ADDRESS_ZERO) {
+    let burn = getOrCreateBurn(event, pair)
+    burn.transferEventApplied = true
+    burn.liquidityAmount = toDecimal(event.params.value, token0.decimals)
+    burn.save()
+    createOrUpdatePositionOnBurn(event, pair, burn)
+  }
+}
+
 export function handleMint(event: Mint): void {
   let pair = PairEntity.load(event.address.toHexString()) as PairEntity
   let token0 = getOrCreateERC20Token(event, Address.fromString(pair.token0))
@@ -170,8 +235,30 @@ export function handleBurn(event: Burn): void {
   burn.save()
   createOrUpdatePositionOnBurn(event, pair, burn)
 }
-export function handleSync(event: Sync): void {
-  
-}
 
+export function handleSync(event: Sync): void {
+  let transactionHash = event.transaction.hash.toHexString()
+
+  let pair = PairEntity.load(event.address.toHexString()) as PairEntity
+  let token0 = getOrCreateERC20Token(event, Address.fromString(pair.token0))
+  let token1 = getOrCreateERC20Token(event, Address.fromString(pair.token1))
+  pair.reserve0 = toDecimal(event.params.reserve0, token0.decimals)
+  pair.reserve1 = toDecimal(event.params.reserve1, token0.decimals)
+  pair.save()
+
+  let isSyncOnly = true
+
+  let possibleMint = MintEntity.load(transactionHash)
+  if (possibleMint != null) {
+    isSyncOnly = false
+    let mint = possibleMint as MintEntity
+    mint.syncEventApplied = true
+    mint.save()
+
+    pair.totalSupply = pair.totalSupply.plus(mint.liquidityAmount)
+    pair.save()
+
+    createOrUpdatePositionOnMint(event, pair, mint)
+  }
+}
 
