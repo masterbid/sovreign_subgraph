@@ -69,6 +69,15 @@ export class Account extends Entity {
     this.set("burns", Value.fromStringArray(value));
   }
 
+  get voteHistory(): Array<string> {
+    let value = this.get("voteHistory");
+    return value.toStringArray();
+  }
+
+  set voteHistory(value: Array<string>) {
+    this.set("voteHistory", Value.fromStringArray(value));
+  }
+
   get positions(): Array<string> {
     let value = this.get("positions");
     return value.toStringArray();
@@ -775,5 +784,72 @@ export class Burn extends Entity {
 
   set transaction(value: Bytes) {
     this.set("transaction", Value.fromBytes(value));
+  }
+}
+
+export class Vote extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save Vote entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save Vote entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("Vote", id.toString(), this);
+  }
+
+  static load(id: string): Vote | null {
+    return store.get("Vote", id) as Vote | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get proposalId(): BigInt {
+    let value = this.get("proposalId");
+    return value.toBigInt();
+  }
+
+  set proposalId(value: BigInt) {
+    this.set("proposalId", Value.fromBigInt(value));
+  }
+
+  get user(): string {
+    let value = this.get("user");
+    return value.toString();
+  }
+
+  set user(value: string) {
+    this.set("user", Value.fromString(value));
+  }
+
+  get support(): boolean {
+    let value = this.get("support");
+    return value.toBoolean();
+  }
+
+  set support(value: boolean) {
+    this.set("support", Value.fromBoolean(value));
+  }
+
+  get votingPower(): BigInt {
+    let value = this.get("votingPower");
+    return value.toBigInt();
+  }
+
+  set votingPower(value: BigInt) {
+    this.set("votingPower", Value.fromBigInt(value));
   }
 }

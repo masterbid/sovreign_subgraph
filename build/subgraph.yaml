@@ -61,3 +61,23 @@ dataSources:
         - event: Sync(uint112,uint112)
           handler: handleSync
       file: SovUsdc\SovUsdc.wasm
+  - kind: ethereum/contract
+    name: ReignDAO
+    network: mainnet
+    source:
+      address: "0xdE809BBe8FB348581D4c913393E0AD456002D591"
+      abi: ReignDAO
+      startBlock: 13047864
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - Vote
+      abis:
+        - name: ReignDAO
+          file: ReignDAO\abis\ReignDAO.json
+      eventHandlers:
+        - event: Vote(indexed uint256,indexed address,bool,uint256)
+          handler: handleVote
+      file: SovUsdc\SovUsdc.wasm

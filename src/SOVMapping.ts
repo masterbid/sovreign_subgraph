@@ -1,10 +1,12 @@
 import { BigInt, BigDecimal, Address, ethereum } from '@graphprotocol/graph-ts';
 import { Mint, Burn, Sync, Transfer } from "../generated/SovUsdc/SovUsdc";
+import {Vote} from "../generated/ReignDAO/ReignDAO";
 import { IERC20 } from '../generated/SovUsdc/IERC20'
 import { 
   Mint as MintEntity,
   Burn as BurnEntity,
   Pair as PairEntity,
+  Vote as voteEntity,
   Token,
   Account as AccountEntity,
   AccountLiquidity as AccountLiquidityEntity,
@@ -259,6 +261,26 @@ export function handleSync(event: Sync): void {
     pair.save()
 
     createOrUpdatePositionOnMint(event, pair, mint)
+  }
+}
+
+export function handleVote(event: Vote): void {
+  let votingPower = event.params.power
+  let proposalId = event.params.proposalId
+  let support = event.params.support
+  let user = getOrCreateAccount(event.params.user)
+  user.save()
+  let proposalIdHex = event.params.proposalId.toHexString()
+
+  let vote = voteEntity.load(proposalIdHex)
+  if(vote == null) {
+    vote = new voteEntity(proposalIdHex)
+    vote.proposalId = proposalId
+    vote.user = user.id
+    vote.support = support
+    vote.votingPower = votingPower
+
+    vote.save()
   }
 }
 

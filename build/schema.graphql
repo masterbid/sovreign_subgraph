@@ -5,6 +5,7 @@ type Account @entity {
   address: Bytes!
   mints: [Mint!]! @derivedFrom(field: "sender")
   burns: [Burn!]! @derivedFrom(field: "sender")
+  voteHistory: [Vote!]! @derivedFrom(field: "user")
   positions: [Position!]! @derivedFrom(field: "account")
 }
 
@@ -84,5 +85,13 @@ type Burn @entity {
   block: BigInt! #<Block number>
   timestamp: BigInt! #<Event timestamp>
   transaction: Bytes! #<Transaction hash>
+}
+
+type Vote @entity {
+  id: ID!
+  proposalId: BigInt!
+  user: Account!
+  support: Boolean!
+  votingPower: BigInt!
 }
 
